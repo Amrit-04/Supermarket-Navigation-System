@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Assistant</title>
+  <style>
+    body {
+      background: #f4f6fb;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      justify-content: center;
+    }
+    h2 {
+      color: #0071ce;
+      margin-bottom: 24px;
+      font-size: 2em;
+    }
+    #speak-btn {
+      background: #0071ce;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 24px 48px;
+      font-size: 1.5em;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: background 0.2s;
+    }
+    #speak-btn:hover {
+      background: #005fa3;
+    }
+    #transcript, #response {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 16px;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 500px;
+      min-height: 40px;
+      font-size: 1.1em;
+    }
+    #response {
+      color: #0071ce;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Voice Assistant</h2>
+  <button id="speak-btn">🎤 Click to Speak</button>
+  <div id="transcript" placeholder="Transcript will appear here..."></div>
+  <div id="response" placeholder="Assistant response will appear here..."></div>
+  <script>
+    const speakBtn = document.getElementById('speak-btn');
+    const transcriptDiv = document.getElementById('transcript');
+    const responseDiv = document.getElementById('response');
+
+    let recognition;
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        transcriptDiv.textContent = text;
+        getVoiceResponse(text);
+      };
+      recognition.onerror = function(event) {
+        transcriptDiv.textContent = "Error: " + event.error;
+      };
+    } else {
+      speakBtn.disabled = true;
+      transcriptDiv.textContent = "Speech recognition not supported in this browser.";
+    }
+
+    speakBtn.onclick = function() {
+      if (recognition) {
+        transcriptDiv.textContent = "Listening...";
+        recognition.start();
+      }
+    };
+
+    async function getVoiceResponse(text) {
+      responseDiv.textContent = "Thinking...";
+      try {
+        const res = await fetch('/voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        responseDiv.textContent = data.response || "No response.";
+      } catch (e) {
+        responseDiv.textContent = "Error contacting assistant.";
+      }
+    }
+  </script>
+</body>
+</html>

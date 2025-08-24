@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Store Navigation</title>
+  <style>
+    body {
+      background: #f4f6fb;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h2 {
+      color: #0071ce;
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-size: 2em;
+    }
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+    }
+    #item {
+      padding: 10px;
+      font-size: 1.1em;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    #find-btn {
+      background: #0071ce;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    #find-btn:hover {
+      background: #005fa3;
+    }
+    #recommendations {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #recommendations.dropdown {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .rec-item {
+      cursor: pointer;
+      color: #0071ce;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fff;
+      transition: background 0.2s, color 0.2s;
+    }
+    .rec-item:last-child {
+      border-bottom: none;
+    }
+    .rec-item:hover, .rec-item.active {
+      background: #e6f0fa;
+      color: #005fa3;
+    }
+    canvas {
+      border: 1px solid #0071ce;
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 32px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Store Map</h2>
+  <div class="search-container">
+    <input id="item" placeholder="Search product name" autocomplete="off" />
+    <div id="recommendations" class="dropdown"></div>
+    <button id="find-btn" onclick="navigate()">Find</button>
+  </div>
+  <canvas id="map" width="1000" height="500"></canvas>
+  <script>
+    const canvas = document.getElementById('map');
+    const ctx = canvas.getContext('2d');
+    const gridWidth = 50;
+    const gridHeight = 30;
+    const img = new Image();
+    img.src = 'store_map.png';
+
+    let imageLoaded = false;
+    img.onload = function() {
+      imageLoaded = true;
+      drawMap();
+    };
+
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+
+    function gridToPixel(x, y) {
+      const cellWidth = canvas.width / gridWidth;
+      const cellHeight = canvas.height / gridHeight;
+      return {
+        px: x * cellWidth + cellWidth / 2,
+        py: y * cellHeight + cellHeight / 2
+      };
+    }
+
+    function drawPath(path) {
+      if (!imageLoaded) {
+        setTimeout(() => drawPath(path), 50);
+        return;
+      }
+      drawMap();
+      if (!path || path.length === 0) return;
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      path.forEach(([x, y], i) => {
+        const { px, py } = gridToPixel(x, y);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+    }
+
+    async function navigate(productName) {
+      const item = productName || document.getElementById('item').value;
+      if (!item) return;
+      // Get product location
+      const res = await fetch(`/search?query=${item}`);
+      const data = await res.json();
+      if (data.x !== undefined) {
+        const nav = await fetch(`/navigate?from_x=28&from_y=26&to_x=${data.x}&to_y=${data.y}`);
+        const path = await nav.json();
+        drawPath(path.path);
+      } else {
+        alert("Item not found");
+        drawMap();
+      }
+    }
+
+    // --- Dropdown Recommendations Logic ---
+    const itemInput = document.getElementById('item');
+    const recDiv = document.getElementById('recommendations');
+    let recs = [];
+    let selectedIndex = -1;
+
+    itemInput.addEventListener('input', async function() {
+      const value = itemInput.value.trim();
+      if (!value) {
+        recDiv.style.display = 'none';
+        return;
+      }
+      try {
+        const res = await fetch(`/recommend?query=${encodeURIComponent(value)}`);
+        const data = await res.json();
+        recs = data.recommendations || [];
+        if (recs.length > 0) {
+          recDiv.innerHTML = '';
+          recs.forEach((rec, idx) => {
+            const div = document.createElement('div');
+            div.className = 'rec-item';
+            div.textContent = rec;
+            div.onclick = () => {
+              itemInput.value = rec;
+              recDiv.style.display = 'none';
+              navigate(rec);
+            };
+            recDiv.appendChild(div);
+          });
+          recDiv.style.display = 'block';
+          selectedIndex = -1;
+        } else {
+          recDiv.style.display = 'none';
+        }
+      } catch (e) {
+        recDiv.style.display = 'none';
+      }
+    });
+
+    // Keyboard navigation for dropdown
+    itemInput.addEventListener('keydown', function(e) {
+      if (recDiv.style.display === 'block' && recs.length > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          selectedIndex = (selectedIndex + 1) % recs.length;
+          updateActiveRec();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          selectedIndex = (selectedIndex - 1 + recs.length) % recs.length;
+          updateActiveRec();
+        } else if (e.key === 'Enter') {
+          if (selectedIndex >= 0 && selectedIndex < recs.length) {
+            itemInput.value = recs[selectedIndex];
+            recDiv.style.display = 'none';
+            navigate(recs[selectedIndex]);
+          } else {
+            navigate();
+          }
+        }
+      }
+    });
+
+    function updateActiveRec() {
+      const items = recDiv.querySelectorAll('.rec-item');
+      items.forEach((item, idx) => {
+        item.classList.toggle('active', idx === selectedIndex);
+      });
+    }
+
+    // Hide dropdown if clicking outside
+    document.addEventListener('click', function(e) {
+      if (!recDiv.contains(e.target) && e.target !== itemInput) {
+        recDiv.style.display = 'none';
+      }
+    });
+
+    // Optional: Enter key triggers search (if not using dropdown)
+    document.getElementById('item').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && selectedIndex === -1) navigate();
+    });
+
+    // Initial draw
+  </script>
+</body>
+</html>
