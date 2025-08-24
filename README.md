@@ -1,112 +1,38 @@
-# Store Navigation System
 
-A smart store navigation system that helps users find products and navigate through stores efficiently using pathfinding algorithms and machine learning recommendations.
+# Supermarket-Navigation-System
+This project is a real-time in-store navigation and inventory management system designed to enhance customer shopping experiences and optimize store operations. Built with Python (FastAPI) on the backend and a map-based interface on the frontend, it provides dynamic routing, inventory visibility, and seamless navigation within retail environments.
 
-## Features
+🔎 Key Features
 
-- **A* Pathfinding Algorithm**: Efficient navigation through store layouts
-- **Product Recommendations**: ML-powered product suggestions using sentence transformers
-- **Interactive Web Interface**: User-friendly frontend for navigation
-- **Voice Navigation**: Voice-controlled navigation features
-- **Store Layout Visualization**: Visual representation of store maps
+Real-Time Navigation: A pathfinding engine runs on a 30×50 grid store layout, enabling customers to find the shortest route to selected products or sections.
 
-## Project Structure
+Dynamic Map Overlay: A visual interface displays the store map, item locations, and suggested paths for smooth navigation.
 
-```
-store_nav/
-├── app/                    # Backend application
-│   ├── main.py           # FastAPI main application
-│   ├── pathfinding.py    # A* pathfinding implementation
-│   ├── crud.py          # Database operations
-│   ├── models.py        # Data models
-│   ├── database.py      # Database configuration
-│   └── grid.csv         # Store layout grid
-├── frontend/             # Frontend files
-│   ├── index.html       # Main navigation interface
-│   ├── navigation.html  # Navigation page
-│   ├── voice.html       # Voice navigation interface
-│   └── store_map.png    # Store layout image
-├── env/                  # Virtual environment (not in repo)
-├── seed_data.py         # Database seeding script
-└── requirements.txt      # Python dependencies
-```
+Inventory Management: Store staff can update stock levels and item positions, ensuring that product availability is always accurate.
 
-## Installation
+Future BLE Integration: Plans include Bluetooth Low Energy (BLE) beacon support to track live customer positions inside the store for precise real-time navigation.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/store-navigation.git
-   cd store-navigation
-   ```
+Scalable Backend: Powered by FastAPI, the backend is lightweight, high-performance, and ready for deployment on Docker/Kubernetes.
 
-2. **Create a virtual environment**
-   ```bash
-   python -m venv env
-   # On Windows
-   env\Scripts\activate
-   # On macOS/Linux
-   source env/bin/activate
-   ```
+🛠️ Tech Stack
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Backend: FastAPI, Python
 
-4. **Set up the database**
-   ```bash
-   python seed_data.py
-   ```
+Frontend: ReactJS (planned), interactive map rendering
 
-5. **Run the application**
-   ```bash
-   cd app
-   uvicorn main:app --reload
-   ```
+Database: PostgreSQL / SQLite for product and layout data
 
-6. **Open your browser**
-   Navigate to `http://localhost:8000`
+Deployment: Docker, Kubernetes, Ansible automation
 
-## Usage
+🚀 Use Cases
 
-### Web Interface
-- Open `index.html` in your browser
-- Select your starting location and destination
-- Get optimal navigation path through the store
+Shoppers: Quickly locate items without needing assistance, reducing frustration and improving satisfaction.
 
-### Voice Navigation
-- Use the voice interface for hands-free navigation
-- Speak your destination to get voice-guided directions
+Store Managers: Manage product placement and stock levels, and monitor customer flow for better layout decisions.
 
-### API Endpoints
-- `GET /`: Main application info
-- `POST /find-path`: Calculate optimal path between two points
-- `GET /products`: Get available products
-- `POST /recommend`: Get product recommendations
+Retail Analytics: Future extensions include heatmap generation and data insights for store optimization.
 
-## Technologies Used
+🌟 Vision
 
-- **Backend**: FastAPI, Python
-- **Pathfinding**: A* Algorithm
-- **Machine Learning**: Scikit-learn, Sentence Transformers
-- **Database**: SQLite
-- **Frontend**: HTML, CSS, JavaScript
-- **Voice**: Web Speech API
+This system is more than just a navigation app—it’s a smart retail assistant. By merging AI-driven pathfinding, IoT tracking (BLE), and inventory intelligence, it aims to create a connected shopping experience where customers save time and retailers gain actionable insights.
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- A* pathfinding algorithm implementation
-- FastAPI framework for the backend
-- Scikit-learn for machine learning capabilities 
